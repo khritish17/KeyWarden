@@ -1,6 +1,7 @@
 # crypotgraphic hash functions library
 import hashlib as HL
 import database_manager as dbm
+import password_manager as PM
 def crypt_hashing(value):
     # perform the cryptographic SHA3_512
     # hash_object
@@ -37,6 +38,7 @@ def signup(UID, PWD, telegram_mobile_no):
     if computed_hash_value == False:
         pwd_hash_value = crypt_hashing(PWD)
         dbm.write(UID, pwd_hash_value, telegram_mobile_no)
+        PM.profile_generator(UID)
         return True
     else:
         return False
