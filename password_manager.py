@@ -2,38 +2,11 @@ import aes_cryptography as aes
 import os 
 import aes_cryptography as crypt
 import time 
-
+import password_generator as PG
 '''
     PDW and salt should be in bytes and masterpassword should be a string
 '''
-# signs up -> redirect to profile generation
-def profile_generator(UID):
-    location = os.path.abspath("")
-    dir_list = os.listdir(location)
-    # first create the User profile directory if not created earlier,
-    # usually happens at the begining of the KWD initiation 
-    if "KWD_User_Profiles" not in dir_list:
-        os.mkdir(location)
-    
-    # create the user directory 
-    # assuming previously the UID is unique, therefore there is no previous 
-    # user profile on the same UID created
-    os.mkdir(location + "\{}".format(UID))
 
-    # now create the credential file
-    cred = open(location + "\{}\credential.txt".format(UID))
-    cred.clsoe()
-    
-    # profile summary
-    profile_summary = open(location + "\{}\profile_summary.txt".format(UID))
-    profile_summary.close()
-    
-    # log file
-    log_file = open(location + "\{}\log.txt".format(UID))
-    cur_time = time.time()
-    cur_time_readable = time.ctime(cur_time)
-    log_file.write("SignUp @ {}\n".format(cur_time_readable))
-    log_file.close()
 
 def password_encryption(PWD, masterpassword, salt):
     PWD = PWD.encode()
@@ -78,10 +51,70 @@ def password_decryption(E2_PWD, masterpassword, salt):
 
 
 # PWD password manager functions
+# signs up -> redirect to profile generation
+def profile_generator(UID):
+    location = os.path.abspath("")
+    dir_list = os.listdir(location)
+    # first create the User profile directory if not created earlier,
+    # usually happens at the begining of the KWD initiation 
+    if "KWD_User_Profiles" not in dir_list:
+        os.mkdir(location + "\KWD_User_Profiles")
+    
+    # create the user directory 
+    # assuming previously the UID is unique, therefore there is no previous 
+    # user profile on the same UID created
+    os.mkdir(location + "\KWD_User_Profiles\{}".format(UID))
+
+    # now create the credential file
+    cred = open(location + "\KWD_User_Profiles\{}\credential.txt".format(UID), "w")
+    cred.close()
+    
+    # log file
+    log_file = open(location + "\KWD_User_Profiles\{}\log.txt".format(UID), "w")
+    cur_time = time.time()
+    cur_time_readable = time.ctime(cur_time)
+    log_file.write("SignUp @ {}\n".format(cur_time_readable))
+    log_file.close()
 
 # appending new login credential
-def append():
-    pass
+def append(UID, masterpassword, loginID, PWD = "", text = "Untitled Text", generate = False):
+    location = os.path.abspath("")
+    # generate the salt
+    salt = PG.password_generator()
+    
+    # expiry date : time period = 3 months 
+    # 3 mnths = 3 * 4 weeks = 3 * 4 * 7 days = 3 * 4 * 7 * 24 hrs = 3 * 4 * 7 * 24 * 3600 secs
+    expiry_time = time.time() +  float(3 * 4 * 7 * 24 * 3600)
+
+    # unique identifier: UID@DDMMYYHHMnMnSS
+    curr_time = str(time.time())
+    curr_time = curr_time.replace('.', '')
+    identifier = "{}@{}".format(UID, curr_time)
+    
+    # double encrypted password, E2_PWD
+    if generate == True:
+        PWD = PG.password_generator()
+    E2_PWD = password_encryption(PWD, masterpassword, salt)
+    
+    # create the User directory, if not generated already
+    if not os.path.isdir(location + "\KWD_User_Profiles\{}".format(UID)):
+        os.mkdir(location + "\KWD_User_Profiles\{}".format(UID))
+
+    # add to the cred file
+    cred = open(location + "\KWD_User_Profiles\{}\credential.txt".format(UID), "a")
+    cred.write("{}\u00b6{}\u00b6{}\u00b6{}\u00b6{}\n".format(identifier, text, loginID, expiry_time, salt))
+    cred.close()
+
+    # generate the encryption file .enc
+    encr = open(location + "\KWD_User_Profiles\{}\{}.enc".format(UID, identifier), "wb")
+    encr.write(E2_PWD)
+    encr.close()
+
+    print(time.time())
+
+# profile_generator("8637293605")
+# append("8637293605", "890", "khritish", "password", "Keywarden")
+# append("8637293605", "890", "khritish34", "password", "Keywarden", True)
 
 # deleting existing login credential
 def delete():
