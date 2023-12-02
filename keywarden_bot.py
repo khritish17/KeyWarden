@@ -2,6 +2,7 @@ import telebot
 from telebot import types
 from dotenv import load_dotenv
 import os
+import authentication as auth
 
 load_dotenv()
 TOKEN = os.getenv("KEYWARDEN_TOKEN")
@@ -54,6 +55,15 @@ def get_login_PWD(message):
     bot.delete_message(message.chat.id, message.message_id -2)
     bot.delete_message(message.chat.id, message.message_id -3)
     bot.delete_message(message.chat.id, message.message_id -4)
+    authenticate_login(message)
+def authenticate_login(message):
+    login_UID = user_data["login_UID"]
+    login_PWD = user_data["login_PWD"]
+    if auth.login(login_UID, login_PWD):
+        bot.send_message(message.chat.id, "Login successfull!")
+    else:
+        bot.send_message(message.chat.id, "Login unsuccessfull!...due to some unexpected error")
+    
 
 # signup interfarce
 def ask_signup_UID(message):
