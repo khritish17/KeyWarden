@@ -38,6 +38,31 @@ def login_signup_decide(call):
     bot.delete_message(call.message.chat.id, call.message.message_id)
     bot.delete_message(call.message.chat.id, call.message.message_id -1 )
 
+# signup interfarce
+def ask_signup_UID(message):
+    msg = bot.send_message(message.chat.id, "Please supply a unique user ID; it is strongly advised to utilize your Telegram mobile number")
+    bot.register_next_step_handler(msg, get_signup_UID)
+def get_signup_UID(message):
+    user_data['signup_UID'] = message.text
+    ask_signup_PWD(message)
+def ask_signup_PWD(message):
+    msg = bot.send_message(message.chat.id, "Please enter a password, ensuring to commit it to memory as recovery is not possible")
+    bot.register_next_step_handler(msg, get_signup_PWD)
+def get_signup_PWD(message):
+    user_data["signup_PWD"] = message.text
+    authenticate_signup(message)
+def authenticate_signup(message):
+    signup_UID = user_data["signup_UID"]
+    signup_PWD = user_data["signup_PWD"]
+    signup_chat_id = message.chat.id
+    if auth.signup(signup_UID, signup_PWD, signup_chat_id):
+        bot.send_message(message.chat.id, "Signup successfull!")
+        ask_login_UID(message)
+    else:
+        bot.send_message(message.chat.id, "Signup unsuccessfull!")
+        bot.send_message(message.chat.id, "Login with the user id and password")
+        login_signup(message)
+
 # login interface
 def ask_login_UID(message):
     msg = bot.send_message(message.chat.id, "Please provide your login ID")
@@ -61,35 +86,23 @@ def authenticate_login(message):
     login_PWD = user_data["login_PWD"]
     if auth.login(login_UID, login_PWD):
         bot.send_message(message.chat.id, "Login successfull!")
+        PWD_manager(message)
     else:
-        bot.send_message(message.chat.id, "Login unsuccessfull!...due to some unexpected error")
-    
+        bot.send_message(message.chat.id, "Login unsuccessfull!")
+        login_signup(message)
+def PWD_manager(message):
+    bot.send_message(message.chat.id,"The following opeartions can be performed:")
+    bot.send_message(message.chat.id, "ADD:\tTo add a new login credential")
+    bot.send_message(message.chat.id, "REQ_ALL:\tTo get all login credential")
+    bot.send_message(message.chat.id, "HISTORY:\tTo get the transaction history")
+    markup = types.InlineKeyboardMarkup()
+    ADD_button = types.InlineKeyboardButton("ADD", callback_data = "append")
+    REQ_ALL_button = types.InlineKeyboardButton("REQ_ALL", callback_data = "req_all")
+    HISTORY_button = types.InlineKeyboardButton("HISTORY", callback_data = "history")
+    markup.add(ADD_button, REQ_ALL_button, HISTORY_button)
+    bot.send_message(message.chat.id, "Choose an operation", reply_markup=markup)
 
-# signup interfarce
-def ask_signup_UID(message):
-    msg = bot.send_message(message.chat.id, "Please supply a unique user ID; it is strongly advised to utilize your Telegram mobile number")
-    bot.register_next_step_handler(msg, get_signup_UID)
-def get_signup_UID(message):
-    user_data['signup_UID'] = message.text
-    ask_signup_PWD(message)
-def ask_signup_PWD(message):
-    msg = bot.send_message(message.chat.id, "Please enter a password, ensuring to commit it to memory as recovery is not possible")
-    bot.register_next_step_handler(msg, get_signup_PWD)
-def get_signup_PWD(message):
-    user_data["signup_PWD"] = message.text
-    ask_signup_MOB(message)
-def ask_signup_MOB(message):
-    msg = bot.send_message(message.chat.id, "Kindly input your Telegram mobile number for receiving OTP and password in future")
-    bot.register_next_step_handler(msg, get_signup_MOB)
-def get_signup_MOB(message):
-    user_data["mob_no"] = message.text
-    bot.delete_message(message.chat.id, message.message_id)
-    bot.delete_message(message.chat.id, message.message_id - 1)
-    bot.delete_message(message.chat.id, message.message_id - 2)
-    bot.delete_message(message.chat.id, message.message_id - 3)
-    bot.delete_message(message.chat.id, message.message_id - 4)
-    bot.delete_message(message.chat.id, message.message_id - 5)
-    bot.delete_message(message.chat.id, message.message_id - 6)
+
 
 if __name__ == '__main__':
     bot.polling()
