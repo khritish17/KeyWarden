@@ -200,14 +200,8 @@ def request_all(UID):
 
 
 # updating an existing login credential
-def update(identifier, masterpassword, new_PWD = "", generate = False):
-    if generate:
-        new_PWD = PG.password_generator()
+def update(identifier, masterpassword, new_PWD = "", new_text = None, generate_PWD = False, update_text = False, update_PWD = False):
     
-    # generate the salt
-    salt = PG.password_generator()
-    E2_PWD = password_encryption(new_PWD, masterpassword, salt)
-    UID = identifier.split('@')[0]
     user_profile_location = os.path.abspath("") + "/KWD_User_Profiles/{}".format(UID)
 
     # get the credentials.txt entries
@@ -215,21 +209,34 @@ def update(identifier, masterpassword, new_PWD = "", generate = False):
     entries = cred.readlines()
     cred.close
     
+    if generate_PWD:
+        new_PWD = PG.password_generator()
+    
+        # generate the salt
+        salt = PG.password_generator()
+        E2_PWD = password_encryption(new_PWD, masterpassword, salt)
+        UID = identifier.split('@')[0]
+
     # find out which line should be updated
     update_index = None
-    text = None
     for i in range(len(entries)):
         line = entries[i]
         temp_identifier = line.split('\u00b6')[0] 
         if identifier == temp_identifier:
-            update_index = i
-            text = line.split('\u00b6')[1] 
+            update_index = i 
             break
+    if update_index == None:
+        return False
     
     # update that line
     line = entries[update_index]
     line = line.split('\u00b6')
-    line[4] = salt
+
+    if update_text:
+        line[1] = new_text
+    if update_PWD:
+        line[4] = salt
+
     line = "\u00b6".join(line, )
     entries[update_index] = line
 
@@ -239,10 +246,11 @@ def update(identifier, masterpassword, new_PWD = "", generate = False):
         cred.write(line)
     cred.close()
 
-    # generate the encryption file .enc
-    encr = open(user_profile_location + "/{}.enc".format(identifier), "wb")
-    encr.write(E2_PWD)
-    encr.close()
+    if update_PWD:
+        # generate the encryption file .enc
+        encr = open(user_profile_location + "/{}.enc".format(identifier), "wb")
+        encr.write(E2_PWD)
+        encr.close()
     return True
 # print(update("8637293605@17009268398154283", "890", generate=True))
 # requesting the transaction history 
