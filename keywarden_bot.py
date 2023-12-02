@@ -3,6 +3,7 @@ from telebot import types
 from dotenv import load_dotenv
 import os
 import authentication as auth
+import password_manager as PM
 
 load_dotenv()
 TOKEN = os.getenv("KEYWARDEN_TOKEN")
@@ -29,14 +30,22 @@ def login_signup(message):
 def login_signup_decide(call):
     if call.data == "login":
         user_data["query"] = "login"
-        bot.send_message(call.message.chat.id, "Please enter your details for the login procedure")
-        ask_login_UID(call.message)
-    if call.data == "signup":
+        msg = bot.send_message(call.message.chat.id, "Please enter your details for the login procedure")
+        ask_login_UID(msg)
+    elif call.data == "signup":
         user_data["query"] = "signup"
-        bot.send_message(call.message.chat.id, "Kindly input your details for the signup procedure")
-        ask_signup_UID(call.message)
-    bot.delete_message(call.message.chat.id, call.message.message_id)
-    bot.delete_message(call.message.chat.id, call.message.message_id -1 )
+        msg = bot.send_message(call.message.chat.id, "Kindly input your details for the signup procedure")
+        ask_signup_UID(msg)
+    elif call.data == "append":
+        msg = bot.send_message(call.message.chat.id, "Input the following parameter:")
+        ask_text(msg)
+    elif call.data == "req_all":
+        pass
+    elif call.data == "history":
+        pass
+
+    # bot.delete_message(call.message.chat.id, call.message.message_id)
+    # bot.delete_message(call.message.chat.id, call.message.message_id -1 )
 
 # signup interfarce
 def ask_signup_UID(message):
@@ -102,6 +111,58 @@ def PWD_manager(message):
     markup.add(ADD_button, REQ_ALL_button, HISTORY_button)
     bot.send_message(message.chat.id, "Choose an operation", reply_markup=markup)
 
+
+# append interface
+append_data = {"append_text":None, "generate":None, "append_UID":None, "append_PWD": "", "append_masterpassword": None}
+def ask_text(message):
+    msg = bot.send_message(message.chat.id, "Please give a name to the credentials. e.g GitHub or Gmail")
+    bot.register_next_step_handler(msg, get_text)
+def get_text(message):
+    append_data["append_text"] = message.text
+    ask_append_UID(message)
+def ask_append_UID(message):
+    msg= bot.send_message(message.chat.id, f"Provide the LoginID you have used in {append_data['append_text']}")
+    bot.register_next_step_handler(msg, get_append_UID)
+def get_append_UID(message):
+    append_data["append_UID"] = message.text
+    ask_to_generate_PWD(message)
+def ask_to_generate_PWD(message):
+    msg = bot.send_message(message.chat.id, "Would you like to generate a strong password or do you prefer using one of yours\n\nType Y for YES\nType N for NO")
+    bot.register_next_step_handler(msg, decide_to_generate_PWD)
+def decide_to_generate_PWD(message):
+    response = (message.text).lower()
+    append_data["generate"] = True if response == 'y' else False
+    if not append_data["generate"]:
+        ask_append_PWD(message)
+    else:
+        ask_masterpassword(message)
+def ask_append_PWD(message):
+    msg = bot.send_message(message.chat.id, "Provide a strong password")
+    bot.register_next_step_handler(msg, get_append_PWD)
+def get_append_PWD(message):
+    append_data["append_PWD"] = message.text
+    ask_masterpassword(message)
+def ask_masterpassword(message):
+    msg = bot.send_message(message.chat.id, "Provide a masterpassword...do not forget this master-password, otherwise your passwords can not be retrived")
+    bot.register_next_step_handler(msg, get_masterpassword)
+def get_masterpassword(message):
+    append_data["append_masterpassword"] = message.text
+    append_credential(message)
+def append_credential(message):
+    append_UID = user_data["login_UID"]
+    append_masterPWD = append_data["append_masterpassword"]
+    append_loginID = append_data["append_UID"]
+    append_PWD = append_data["append_PWD"]
+    append_generate = append_data["generate"]
+    append_text = append_data["append_text"]
+    if PM.append(UID=append_UID, masterpassword=append_masterPWD, loginID=append_loginID, PWD=append_PWD,text= append_text, generate= append_generate):
+        msg =bot.send_message(message.chat.id, "Successfully and securely added the Credential")
+        PWD_manager(msg)
+
+    
+
+# delete interface
+# history
 
 
 if __name__ == '__main__':
