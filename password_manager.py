@@ -207,7 +207,7 @@ def update(identifier, masterpassword, new_PWD = "", new_text = None, generate_P
     # get the credentials.txt entries
     cred = open(user_profile_location + "/credential.txt", "r")
     entries = cred.readlines()
-    cred.close
+    cred.close()
     
     if generate_PWD:
         new_PWD = PG.password_generator()

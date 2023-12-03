@@ -13,6 +13,9 @@ bot = telebot.TeleBot(TOKEN)
 # user_data
 user_data = {'query': None, 'login_UID': None, 'login_PWD':None, 'signup_UID': None, 'signup_PWD': None, 'mob_no':None}
 
+# request data
+request_data = {"identifier":None}
+
 # start function
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -40,9 +43,22 @@ def login_signup_decide(call):
         msg = bot.send_message(call.message.chat.id, "Input the following parameter:")
         ask_text(msg)
     elif call.data == "req_all":
+        request_all_cred(call.message)
         pass
     elif call.data == "history":
         pass
+    else:
+        data = call.data
+        identifier, function = data.split('\u00b6')
+        if function == "REQ_ALL":
+            request_data["identifier"] = identifier
+            ask_request_masterpassword(call.message)
+        elif function == "REQUEST":
+            print("REQUEST call")
+        elif function == "DELETE":
+            print("DELETE call")
+        elif function == "UPDATE":
+            print("UPDATE call")
 
     # bot.delete_message(call.message.chat.id, call.message.message_id)
     # bot.delete_message(call.message.chat.id, call.message.message_id -1 )
@@ -147,7 +163,22 @@ def ask_masterpassword(message):
     bot.register_next_step_handler(msg, get_masterpassword)
 def get_masterpassword(message):
     append_data["append_masterpassword"] = message.text
-    append_credential(message)
+    ask_append_confirm(message)
+def ask_append_confirm(message):
+    msg1 = bot.send_message(message.chat.id, "Lets confirm the Credential")
+    msg2 = bot.send_message(message.chat.id, f"{append_data['append_text']}")
+    msg3 = bot.send_message(message.chat.id, f"Login ID: {append_data['append_UID']}")
+    msg4 = bot.send_message(message.chat.id, f"Password: {append_data['append_PWD']}")
+    msg5 = bot.send_message(message.chat.id, f"Type y/n for yes/no")
+    bot.register_next_step_handler(msg5, get_append_confirm) 
+def get_append_confirm(message):
+    confirmation = message.text
+    confirmation = confirmation.lower()
+    confirmation = True if confirmation == 'y' else False
+    if confirmation:
+        append_credential(message)
+    else:
+        PWD_manager(message)
 def append_credential(message):
     append_UID = user_data["login_UID"]
     append_masterPWD = append_data["append_masterpassword"]
@@ -161,7 +192,42 @@ def append_credential(message):
 
     
 
-# delete interface
+# request_all interface
+request_all_data = {}
+def request_all_cred(message):
+    UID = user_data["login_UID"]
+    identifier_text = PM.request_all(UID)
+
+    keyboard = types.InlineKeyboardMarkup()
+    for identifier, text in identifier_text.items():
+        request_all_data[identifier] = text
+        button = types.InlineKeyboardButton(text, callback_data= identifier + "\u00b6REQ_ALL")
+        keyboard.add(button)
+    bot.send_message(message.chat.id, "Press on the button you want to request credentials", reply_markup=keyboard)
+def get_particular_cred(message, identifier):
+    text = request_all_data[identifier]
+
+    keyboard = types.InlineKeyboardMarkup()
+    request_button = types.InlineKeyboardButton("REQUEST", callback_data=identifier + "\u00b6REQUEST")
+    update_button = types.InlineKeyboardButton("UPDATE", callback_data=identifier + "\u00b6UPDATE")
+    delete_button = types.InlineKeyboardButton("DELETE", callback_data=identifier+"\u00b6DELETE")
+    keyboard.add(request_button, update_button, delete_button)
+    bot.send_message(message.chat.id, f"{text}", reply_markup=keyboard)
+
+# request interface
+def ask_request_masterpassword(message):
+    identifier = request_data["identifier"]
+    msg = bot.send_message(message.chat.id, f"Type the master-password for {request_all_data[identifier]}")
+    bot.register_next_step_handler(msg, get_request_masterpassword)
+def get_request_masterpassword(message):
+    masterpassword = message.text
+    identifier = request_data["identifier"]
+    loginID, password = PM.request(identifier, masterpassword)
+    msg1 = bot.send_message(message.chat.id, f"{request_all_data[identifier]} credential:")
+    msg2 = bot.send_message(msg1.chat.id, f"LoginID: {loginID}")
+    msg3 = bot.send_message(msg2.chat.id, f"Password: {password}")
+
+    
 # history
 
 
