@@ -1,19 +1,3 @@
-SignUp on Sat Dec  2 15:01:45 2023
-New Login credential added 'Untitled Text' on Sat Dec  2 22:13:47 2023
-New Login credential added 'Github' on Sat Dec  2 22:19:33 2023
-New Login credential added 'Gmail' on Sat Dec  2 22:24:59 2023
-Requested all credential for the user: 'khritish17' on Sun Dec  3 14:24:34 2023
-Requested all credential for the user: 'khritish17' on Sun Dec  3 14:42:14 2023
-New Login credential added 'PornHub' on Sun Dec  3 15:02:32 2023
-New Login credential added 'Amazon' on Sun Dec  3 15:04:32 2023
-Requested all credential for the user: 'khritish17' on Sun Dec  3 15:51:15 2023
-Requested all credential for the user: 'khritish17' on Sun Dec  3 16:07:13 2023
-Requested all credential for the user: 'khritish17' on Sun Dec  3 16:34:44 2023
-Requested all credential for the user: 'khritish17' on Sun Dec  3 16:36:06 2023
-Requested all credential for the user: 'khritish17' on Sun Dec  3 16:38:24 2023
-Requested all credential for the user: 'khritish17' on Sun Dec  3 16:39:27 2023
-Requested the credential for PornHub on Sun Dec  3 16:39:34 2023
-Requested all credential for the user: 'khritish17' on Sun Dec  3 16:40:39 2023
-Requested the credential for PornHub on Sun Dec  3 16:40:44 2023
-Requested all credential for the user: 'khritish17' on Sun Dec  3 16:42:59 2023
-Requested the credential for PornHub on Sun Dec  3 16:43:07 2023
+SignUp on Sun Dec  3 23:45:36 2023
+New Login credential added 'Github' on Sun Dec  3 23:46:32 2023
+Requested the transaction history of user 'khritish17' on Sun Dec  3 23:46:40 2023

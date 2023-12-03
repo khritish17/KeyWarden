@@ -201,17 +201,19 @@ def request_all(UID):
 
 # updating an existing login credential
 def update(identifier, masterpassword, new_PWD = "", new_text = None, generate_PWD = False, update_text = False, update_PWD = False):
-    
+    UID = identifier.split('@')[0]
     user_profile_location = os.path.abspath("") + "/KWD_User_Profiles/{}".format(UID)
 
     # get the credentials.txt entries
     cred = open(user_profile_location + "/credential.txt", "r")
     entries = cred.readlines()
     cred.close()
-    
-    if generate_PWD:
-        new_PWD = PG.password_generator()
-    
+
+    salt = None
+    if update_PWD:
+        if generate_PWD:
+            new_PWD = PG.password_generator()
+        
         # generate the salt
         salt = PG.password_generator()
         E2_PWD = password_encryption(new_PWD, masterpassword, salt)
@@ -231,14 +233,15 @@ def update(identifier, masterpassword, new_PWD = "", new_text = None, generate_P
     # update that line
     line = entries[update_index]
     line = line.split('\u00b6')
+    # print(line)
 
     if update_text:
         line[1] = new_text
     if update_PWD:
         line[4] = salt
-
-    line = "\u00b6".join(line, )
-    entries[update_index] = line
+    # print(line)
+    line = "\u00b6".join(line)
+    entries[update_index] = line + "\n"
 
     # put everything to credential file
     cred = open(user_profile_location + "/credential.txt", "w")
@@ -252,7 +255,8 @@ def update(identifier, masterpassword, new_PWD = "", new_text = None, generate_P
         encr.write(E2_PWD)
         encr.close()
     return True
-# print(update("8637293605@17009268398154283", "890", generate=True))
+# update("khritish17@17015360988602211", "456", "gmail_pass", None, False, False, True)
+# print(update("khritish17@1701535773679844", "456", "new_gmail_pass", "Google Mail", False, True, True))
 # requesting the transaction history 
 def history(UID):
     user_profile_location = os.path.abspath("") + "/KWD_User_Profiles/{}".format(UID)

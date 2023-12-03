@@ -16,6 +16,12 @@ user_data = {'query': None, 'login_UID': None, 'login_PWD':None, 'signup_UID': N
 # request data
 request_data = {"identifier":None}
 
+# delete data
+delete_data = {"identifier":None}
+
+# update data
+update_data = {"identifier": None, "masterpassword":None, "new_PWD":"", "new_text":None, "generate_PWD": False, "update_text":False, "update_PWD": False}
+
 # start function
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -46,19 +52,21 @@ def login_signup_decide(call):
         request_all_cred(call.message)
         pass
     elif call.data == "history":
-        pass
+        get_history(call.message)
     else:
         data = call.data
         identifier, function = data.split('\u00b6')
-        if function == "REQ_ALL":
+        if function == "REQUEST_ALL":
             request_data["identifier"] = identifier
-            ask_request_masterpassword(call.message)
+            get_particular_cred(call.message)
         elif function == "REQUEST":
-            print("REQUEST call")
+            ask_request_masterpassword(call.message)
         elif function == "DELETE":
-            print("DELETE call")
+            delete_data["identifier"] = identifier
+            ask_confirm_delete_cred(call.message)
         elif function == "UPDATE":
-            print("UPDATE call")
+            update_data["identifier"] = identifier
+            ask_to_update_PWD(call.message)
 
     # bot.delete_message(call.message.chat.id, call.message.message_id)
     # bot.delete_message(call.message.chat.id, call.message.message_id -1 )
@@ -201,10 +209,11 @@ def request_all_cred(message):
     keyboard = types.InlineKeyboardMarkup()
     for identifier, text in identifier_text.items():
         request_all_data[identifier] = text
-        button = types.InlineKeyboardButton(text, callback_data= identifier + "\u00b6REQ_ALL")
+        button = types.InlineKeyboardButton(text, callback_data= identifier + "\u00b6REQUEST_ALL")
         keyboard.add(button)
     bot.send_message(message.chat.id, "Press on the button you want to request credentials", reply_markup=keyboard)
-def get_particular_cred(message, identifier):
+def get_particular_cred(message):
+    identifier = request_data["identifier"]
     text = request_all_data[identifier]
 
     keyboard = types.InlineKeyboardMarkup()
@@ -227,9 +236,102 @@ def get_request_masterpassword(message):
     msg2 = bot.send_message(msg1.chat.id, f"LoginID: {loginID}")
     msg3 = bot.send_message(msg2.chat.id, f"Password: {password}")
 
-    
-# history
+# delete interface
+def ask_confirm_delete_cred(message):
+    msg1 = bot.send_message(message.chat.id,"Confirm the credential delete")
+    msg2 = bot.send_message(message.chat.id, "Type Y/N for Yes/No")
+    bot.register_next_step_handler(msg2, get_confirm_delete_cred)
+def get_confirm_delete_cred(message):
+    conformation = message.text
+    conformation = conformation.lower()
+    conformation = True if conformation == 'y' else False
+    if conformation:
+        PM.delete(delete_data["identifier"])
+        bot.send_message(message.chat.id, "Deleted the credential")
+        PWD_manager(message)
+    else:
+        PWD_manager(message)
 
+# update interface
+def ask_to_update_PWD(message):
+    bot.send_message(message.chat.id, "Do you want to update the password")
+    msg = bot.send_message(message.chat.id, "Type Y/N for Yes/No")
+    bot.register_next_step_handler(msg, decide_to_update_PWD)
+def decide_to_update_PWD(message):
+    update_PWD = (message.text).lower()
+    update_PWD = True if update_PWD == 'y' else False
+    update_data["update_PWD"] = update_PWD
+    if update_PWD:
+        ask_to_generate_PWD_update(message)
+    else:
+        ask_to_update_text(message)
+def ask_to_generate_PWD_update(message):
+    bot.send_message(message.chat.id, "Would you like to generate a strong password")
+    msg = bot.send_message(message.chat.id, "Type Y/N for Yes/No")
+    bot.register_next_step_handler(msg, decide_to_generate_PWD_update)
+def decide_to_generate_PWD_update(message):
+    generate_PWD = (message.text).lower()
+    generate_PWD = True if generate_PWD == 'y' else False
+    update_data["generate_PWD"] = generate_PWD
+    if not generate_PWD:
+        ask_to_write_PWD_update(message)
+    else:
+        ask_to_update_text(message)
+def ask_to_write_PWD_update(message):
+    msg = bot.send_message(message.chat.id, "Provide a strong password")
+    bot.register_next_step_handler(msg, get_to_write_PWD_update)
+def get_to_write_PWD_update(message):
+    new_PWD = message.text 
+    update_data["new_PWD"] = new_PWD
+    ask_to_update_text(message)
+
+def ask_to_update_text(message):
+    bot.send_message(message.chat.id, "Would you like to update the Name")
+    msg = bot.send_message(message.chat.id, "Type Y/N for Yes/No")
+    bot.register_next_step_handler(msg, decide_to_update_text)
+def decide_to_update_text(message):
+    update_text = (message.text).lower()
+    update_text = True if update_text == 'y' else False
+    update_data["update_text"] = update_text
+    if update_text:
+        ask_to_write_text_update(message)
+    else:
+        ask_for_masterpassword_update(message)
+def ask_to_write_text_update(message):
+    msg = bot.send_message(message.chat.id, "Choose a name for the credentials")
+    bot.register_next_step_handler(msg, get_to_write_text_update)
+def get_to_write_text_update(message):
+    new_text = message.text
+    update_data["new_text"] = new_text
+    ask_for_masterpassword_update(message)
+
+def ask_for_masterpassword_update(message):
+    msg = bot.send_message(message.chat.id, "Type the masterpassword")
+    bot.register_next_step_handler(msg, get_the_masterpassword_update)
+def get_the_masterpassword_update(message):
+    masterpassword = message.text
+    update_data["masterpassword"] = masterpassword
+    perform_update(message)
+
+def perform_update(message):
+    identifier = update_data["identifier"]
+    masterpassword = update_data["masterpassword"]
+    new_PWD = update_data["new_PWD"]
+    new_text = update_data["new_text"]
+    generate_PWD = update_data["generate_PWD"]
+    update_text = update_data["update_text"]
+    update_PWD = update_data["update_PWD"]
+    if PM.update(identifier, masterpassword, new_PWD, new_text, generate_PWD, update_text, update_PWD):
+        msg = bot.send_message(message.chat.id, "Successfully updated the credential!!!")
+        PWD_manager(msg)
+
+# history
+def get_history(message):
+    log = PM.history(user_data["login_UID"])
+    msg = None
+    for i in range(len(log)):
+        msg = bot.send_message(message.chat.id, f"[{i + 1}] {log[i]}")
+    PWD_manager(msg)
 
 if __name__ == '__main__':
     bot.polling()
